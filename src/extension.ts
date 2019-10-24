@@ -43,6 +43,22 @@ export function activate(context: vscode.ExtensionContext) {
 	const violationDecorationType = vscode.window.createTextEditorDecorationType({
 		borderWidth: '10px',
 		borderStyle: 'solid',
+		overviewRulerColor: 'red',
+		overviewRulerLane: vscode.OverviewRulerLane.Right,
+		light: {
+			// this color will be used in light color themes
+			borderColor: 'red'
+		},
+		dark: {
+			// this color will be used in dark color themes
+			borderColor: 'red'
+		}
+	});
+
+	// create a decorator type for compliant annotations
+	const compliantDecorationType = vscode.window.createTextEditorDecorationType({
+		borderWidth: '10px',
+		borderStyle: 'solid',
 		overviewRulerColor: 'blue',
 		overviewRulerLane: vscode.OverviewRulerLane.Right,
 		light: {
@@ -194,7 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// --> matchClause describes for which regex the highlighting will be done
 		// --> annotationTag describes the content of the highlighting when hovering over it
 		const regEx = new RegExp(matchClause, 'g');
-		const violationTags: vscode.DecorationOptions[] = [];
+		let violationTags: vscode.DecorationOptions[] = [];
 		let match;
 		while (match = regEx.exec(text)) {
 			const startPos = activeEditor.document.positionAt(match.index);
@@ -202,7 +218,9 @@ export function activate(context: vscode.ExtensionContext) {
 			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: annotationTag};
 			violationTags.push(decoration);
 		}
-		activeEditor.setDecorations(violationDecorationType, violationTags);
+		if (annotationTag != ADR_COMPLIANT) activeEditor.setDecorations(violationDecorationType, violationTags);
+		else activeEditor.setDecorations(compliantDecorationType, violationTags);
+		console.log(annotationTag);
 	}
 
 	function triggerUpdateDecorations() {
