@@ -25,5 +25,5 @@ The sample code show the usage of the vscode.[`TextEditor.setDecorations`](https
   * The extension will highlight the configuration on the spot where the description of the corresponding ADR is configured and describes the current state of the config within the hover message.
 
 ![Violated ADR](https://github.com/ADDC-IAAS-prototyping/vsc-adr-decorator/blob/master/media/preview_violated.png)  
-![Semi compliant ADR](https://github.com/ADDC-IAAS-prototyping/vsc-adr-decorator/blob/master/media/preview_semi_compliant.png  
+![Semi compliant ADR](https://github.com/ADDC-IAAS-prototyping/vsc-adr-decorator/blob/master/media/preview_semi_compliant.png)  
 ![Compliant with ADR](https://github.com/ADDC-IAAS-prototyping/vsc-adr-decorator/blob/master/media/preview_compliant.png)
