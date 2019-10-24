@@ -26,6 +26,14 @@ const MEMQUOTA_NOT_FOUND: string = 'No memquota found in this template file';
 const ADR_COMPLIANT: string = 'Compliant with ADR';
 const ADR_VIOLATED: string = 'ADR violated';
 
+// Conversion table for converting measures from different time units to seconds
+let unitConversion: {[key: string]: number} = {};
+unitConversion['second'] = 1;
+unitConversion['minute'] = 60;
+unitConversion['hour'] = 3600;
+unitConversion['day'] = 86400;
+unitConversion['year'] = 31536000;
+
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('adr decorator is activated');
@@ -130,8 +138,49 @@ export function activate(context: vscode.ExtensionContext) {
 		// CHECK FOR COMPLIANCE FOR >>KONG<< TEMPLATE FILE
 		else if (provider == KONG) {
 			console.log("Provider: " + KONG);
-			matchClause = 'plugins';
-			annotationTag = 'This is the matching property';
+			// matchClause = 'plugins';
+			// annotationTag = 'This is the matching property';
+
+			// --> Get first entry in docs since kong has only one config per file
+			const document = docs[0]['plugins'];
+			
+			// --> Get destination id
+			let destination: string;
+			if (document['route'] != undefined) {
+				destination = document['route'];
+			} else if (document['service'] != undefined) {
+				destination = document['service'];
+			} else {
+				destination = '';
+			}
+
+			// --> Get origin caller id
+			let source = (document['consumer'] != undefined) 
+				? document['consumer'] 
+				: '';
+
+			// --> Get the highest unit of kong config
+			let units: string[] = ['second', 'minute', 'hour', 'day', 'month', 'year'];
+			let config = document['config'];
+			let highestUnit = '';
+			for (let unit of units) {
+				if (config[unit] != undefined) {
+					highestUnit = unit;
+				}
+			}
+
+			// --> Get ADR interval in current highest unit
+			let intervalAsNumber: number = config_interval.substring(0, config_interval.length-1);
+			let alignedInterval = unitConversion[highestUnit] / intervalAsNumber;
+			let alignedRequestRate = alignedInterval * config_rate;
+			
+			// --> Define the measure for compliance 
+			// (THIS CAN BE EXCHANGED LATER IF THERE IS A DEMAND TO MAKE IT MORE FINE GRAINED LIKE IN THE CLI TOOL)
+			const config_rate_kong = config[highestUnit];
+			annotationTag = (config_rate_kong != alignedRequestRate)
+				? ADR_VIOLATED + ': ' + '<' + highestUnit + ': ' + alignedRequestRate + '> ' + '(original config: ' + config_interval + ': ' + config_rate + ')' 
+				: ADR_COMPLIANT;
+			matchClause = highestUnit;
 		}
 
 		// IF IT IS NOT A SUPPORTED PROVIDER IGNORE THE GIVEN FILE
